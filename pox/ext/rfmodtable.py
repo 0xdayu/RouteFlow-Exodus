@@ -18,7 +18,7 @@ log = core.getLogger("rfproxy")
 class RouteModTable:
     def __init__(self):
         self.RouteModTable = {}
-        self.RouteTable = set()
+        self.RouteTable = []
 
     def getRouteModTable(self):
         return self.RouteModTable
@@ -92,15 +92,15 @@ class RouteModTable:
         self.generateRouteTable()
 
     def generateRouteTable(self):
-        self.RouteTable.clear()
+        tempRouteTable = set()
         for key, value in self.RouteModTable.iteritems():
             (swid, in_port, addr, prefix, nw_proto, tp_src, tp_dst, \
                 dl_type, dl_src, dl_dst, priority, idle_timeout, hard_timeout) = key
             (out_port, set_dl_src, set_dl_dst) = value
             if out_port == 65533 or addr is None or prefix is None or out_port is None:
                 continue
-            self.RouteTable.add((swid, addr, prefix, out_port))
-        sorted(self.RouteTable, reverse=True)
+            tempRouteTable.add((str(swid), str(addr), str(prefix), str(out_port)))
+        self.RouteTable = list(tempRouteTable)
 
     def printRouteTable(self):
 
