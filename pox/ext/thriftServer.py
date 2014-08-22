@@ -1,5 +1,5 @@
 import sys
-sys.path.append('./gen-py')
+sys.path.append('../gen-py')
  
 from route import GetRouteEntry 
 from route.ttypes import *
@@ -12,15 +12,13 @@ from thrift.server import TServer
 import socket
 
 class GetRouteEntryHandler:
-    def __init__(self):
-        t = ("1","1.2.3.4","32","6")
-        q = ("1","1.2.3.4","32","5")
-        self.RouteTable = []
-        self.RouteTable.append(q)       
-        self.RouteTable.append(t)   
+    def __init__(self,rt):
+        self.RouteTable = rt
         self.log = {}
 
     def get(self, req):
+        print "Request Received!"
+        print "The size of Routing table is:%d" % len(self.RouteTable)
         if len(req.arguments) != 4:
             reply = QueryReply()
             reply.result = None
@@ -58,10 +56,10 @@ def isVal(a):
     b = a.replace(".","")
     return not b.isdigit()
     
-
+'''
 handler = GetRouteEntryHandler()
 processor = GetRouteEntry.Processor(handler)
-transport = TSocket.TServerSocket("localhost", port = 9090)
+transport = TSocket.TServerSocket("192.168.1.102", port = 9090)
 tfactory = TTransport.TBufferedTransportFactory()
 pfactory = TBinaryProtocol.TBinaryProtocolFactory()
 
@@ -70,3 +68,4 @@ server = TServer.TSimpleServer(processor, transport, tfactory, pfactory)
 print "Starting thrift server in python..."
 server.serve()
 print "done!"
+'''

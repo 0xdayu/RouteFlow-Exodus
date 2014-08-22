@@ -15,6 +15,39 @@ from rflib.defs import *
 from rfofmsg import *
 
 from rfmodtable import *
+from thriftServer import *
+
+import sys
+sys.path.append('../gen-py')
+ 
+from route import GetRouteEntry 
+from route.ttypes import *
+
+from thrift.transport import TSocket
+from thrift.transport import TTransport
+from thrift.protocol import TBinaryProtocol
+from thrift.server import TServer
+ 
+import socket
+
+lock = threading.Lock()
+
+class thriftServer(threading.Thread):
+    def __init__(self, rt):
+        threading.Thread.__init__(self)
+        self.handler = GetRouteEntryHandler(rt)
+        self.processor = GetRouteEntry.Processor(self.handler)
+        self.transport = TSocket.TServerSocket("192.168.1.102", port = 9090)
+        self.tfactory = TTransport.TBufferedTransportFactory()
+        self.pfactory = TBinaryProtocol.TBinaryProtocolFactory()
+
+        self.server = TServer.TSimpleServer(self.processor, self.transport, self.tfactory, self.pfactory)
+    
+    def run(self):
+        print "Starting thrift server in python..."
+        self.server.serve()
+        print "done!"
+ 
 
 FAILURE = 0
 SUCCESS = 1
@@ -70,6 +103,9 @@ ipc = MongoIPC.MongoIPCMessageService(MONGO_ADDRESS, MONGO_DB_NAME, str(ID),
                                       threading.Thread, time.sleep)
 table = Table()
 rmtable = RouteModTable()
+rt = rmtable.getRouteTable()
+tfserver = thriftServer(rt)
+tfserver.start()
 
 # Logging
 log = core.getLogger("rfproxy")
@@ -174,8 +210,12 @@ class RFProcessor(IPC.IPCMessageProcessor):
         if type_ == ROUTE_MOD:
             try:
                 ofmsg = create_flow_mod(msg)
+                lock.acquire()
                 rmtable.processRouteModTable(msg)
+                lock.release()
                 rmtable.printRouteTable()
+                print "!!!"
+                print len(rmtable.getRouteTable())
             except Warning as e:
                 log.info("Error creating FlowMod: {}" % str(e))
             if send_of_msg(msg.get_id(), ofmsg) == SUCCESS:

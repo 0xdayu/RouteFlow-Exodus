@@ -20,8 +20,8 @@ class RouteModTable:
         self.RouteModTable = {}
         self.RouteTable = []
 
-    def getRouteModTable(self):
-        return self.RouteModTable
+    def getRouteTable(self):
+        return self.RouteTable
 
     def processRouteModTable(self, routemod):
         mod = routemod.get_mod()
@@ -100,7 +100,10 @@ class RouteModTable:
             if out_port == 65533 or addr is None or prefix is None or out_port is None:
                 continue
             tempRouteTable.add((str(swid), str(addr), str(prefix), str(out_port)))
-        self.RouteTable = list(tempRouteTable)
+        #self.RouteTable = list(tempRouteTable)
+        del self.RouteTable[:] #Clear previous RouteTable
+        for t in tempRouteTable:
+            self.RouteTable.append(t)
 
     def printRouteTable(self):
 
